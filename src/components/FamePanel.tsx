@@ -256,23 +256,21 @@ export default function FamePanel() {
                 {profile.posts.map((post, i) => (
                   <div
                     key={i}
-                    className="relative aspect-square border border-border-dim bg-bg-card overflow-hidden"
+                    className="relative aspect-square border border-border-dim bg-bg-card overflow-hidden flex items-center justify-center"
                   >
-                    {post.thumbnail ? (
+                    {post.thumbnail && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={post.thumbnail}
                         alt=""
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover opacity-60"
+                        className="absolute inset-0 w-full h-full object-cover opacity-60"
                         onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
-                    ) : null}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[9px] text-neon-green/60">{i + 1}</span>
-                    </div>
+                    )}
+                    <span className="relative z-10 text-[9px] text-neon-green/60">{i + 1}</span>
                     {isDone && (
-                      <div className="absolute inset-0 bg-neon-green/20 flex items-center justify-center">
+                      <div className="absolute inset-0 z-20 bg-neon-green/20 flex items-center justify-center">
                         <CheckCircle className="w-4 h-4 text-neon-green" />
                       </div>
                     )}
