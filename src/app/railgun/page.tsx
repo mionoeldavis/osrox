@@ -426,23 +426,25 @@ export default function RailgunPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={handleFire}
-                disabled={firing || !cleanTarget}
-                whileTap={{ scale: 0.98 }}
+                disabled={firing || !preview}
+                whileTap={preview && !firing ? { scale: 0.98 } : {}}
                 className={`w-full py-3 border text-sm font-bold tracking-widest transition-all flex items-center justify-center gap-2 ${
                   firing
                     ? "border-neon-yellow/50 text-neon-yellow cursor-not-allowed"
-                    : !cleanTarget
+                    : !preview
                     ? "border-border-dim text-text-dim cursor-not-allowed"
                     : "border-neon-yellow/60 text-neon-yellow hover:bg-neon-yellow/10 cursor-pointer"
                 }`}
                 style={
-                  cleanTarget && !firing
+                  preview && !firing
                     ? { boxShadow: "0 0 8px rgba(255,230,0,0.3), 0 0 30px rgba(255,230,0,0.1)" }
                     : {}
                 }
               >
                 {firing ? (
                   <><Zap className="w-4 h-4 animate-pulse" />FIRING ON @{firedTarget}...</>
+                ) : previewLoading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" />RESOLVING TARGET...</>
                 ) : (
                   <><Zap className="w-4 h-4" />FIRE RAILGUN</>
                 )}
