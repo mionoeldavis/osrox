@@ -51,7 +51,7 @@ const brightDataProfileSchema = z.object({
 type BrightDataProfile = z.infer<typeof brightDataProfileSchema>;
 
 const BRIGHTDATA_API = "https://api.brightdata.com/datasets/v3";
-const DATASET_ID = "gd_l1vikfch901nx3by4";
+const DATASET_ID = "gd_lk5ns7kz21pck8jpis";
 const POLL_INTERVAL_MS = 5000;
 const POLL_TIMEOUT_MS = 120_000;
 
@@ -125,11 +125,13 @@ export async function scrapeInstagramProfile(
   const cleanUsername = username.replace(/^@/, "").trim();
 
   const res = await fetch(
-    `${BRIGHTDATA_API}/scrape?dataset_id=${DATASET_ID}&type=discover_new&discover_type=user_name&format=json`,
+    `${BRIGHTDATA_API}/scrape?dataset_id=${DATASET_ID}&format=json`,
     {
       method: "POST",
       headers: authHeaders(),
-      body: JSON.stringify({ input: [{ user_name: cleanUsername }] }),
+      body: JSON.stringify({
+        input: [{ url: `https://www.instagram.com/${cleanUsername}/` }],
+      }),
     },
   );
 
