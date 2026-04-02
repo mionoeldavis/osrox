@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, LayoutDashboard, Zap, Star } from "lucide-react";
+import { Shield, LayoutDashboard, Zap, Star, Bomb } from "lucide-react";
 
 const NavbarClient = dynamic(() => import("./NavbarClient"), { ssr: false });
 
@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/dashboard", label: "DASHBOARD", icon: LayoutDashboard },
   { href: "/railgun", label: "RAILGUN", icon: Zap },
   { href: "/fame", label: "FAME", icon: Star },
+  { href: "/bomb", label: "BOMB", icon: Bomb },
 ];
 
 export default function Navbar() {
