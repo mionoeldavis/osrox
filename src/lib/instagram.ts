@@ -1,5 +1,6 @@
-import { Stagehand, AISdkClient } from "@browserbasehq/stagehand";
+import { chromium } from "playwright-core";
 import { createGateway } from "@ai-sdk/gateway";
+import { generateObject } from "ai";
 import { z } from "zod";
 
 export interface InstagramPost {
@@ -64,31 +65,33 @@ export async function scrapeInstagramProfile(
     apiKey: process.env.AI_GATEWAY_API_KEY,
   });
 
-  const stagehand = new Stagehand({
-    env: "BROWSERBASE",
-    apiKey: process.env.BROWSERBASE_API_KEY,
-    projectId: process.env.BROWSERBASE_PROJECT_ID,
-    llmClient: new AISdkClient({
-      model: gateway("google/gemini-2.5-flash"),
-    }),
-    verbose: 0,
-  });
+  const model = gateway("google/gemini-2.5-flash");
 
-  await stagehand.init();
+  const browser = await chromium.connectOverCDP(
+    `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_API_KEY}`,
+  );
+
+  const context = await browser.newContext({
+    userAgent:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  });
+  const page = await context.newPage();
 
   try {
-    const page = stagehand.context.pages()[0];
     await page.goto(`https://www.instagram.com/${cleanUsername}/`, {
       waitUntil: "domcontentloaded",
-      timeoutMs: 30000,
+      timeout: 30000,
     });
 
     await page.waitForTimeout(3000);
 
-    const profileData = await stagehand.extract(
-      "Extract the profile information from this Instagram profile page including: full name, bio/description, profile picture URL, whether the account is verified, whether the account is private, number of followers, number of following, and number of posts",
-      profileSchema,
-    );
+    const html = await page.content();
+
+    const { object: profileData } = await generateObject({
+      model,
+      schema: profileSchema,
+      prompt: `Extract the profile information from this Instagram profile page HTML. Look for: full name, bio/description, profile picture URL, whether the account is verified (blue checkmark), whether the account is private, number of followers, number of following, and number of posts.\n\nHTML:\n${html}`,
+    });
 
     if (profileData.isPrivate) {
       return {
@@ -106,16 +109,19 @@ export async function scrapeInstagramProfile(
       };
     }
 
-    const [postsData, highlightsData] = await Promise.all([
-      stagehand.extract(
-        "Extract the last 6 post links from the profile grid. For each post, get the full URL (like https://www.instagram.com/p/...) and the thumbnail image URL. Only include actual post links, not story circles.",
-        postSchema,
-      ),
-      stagehand.extract(
-        "Extract story highlight circles visible on the profile. For each highlight, get its title/label and a link to it (https://www.instagram.com/stories/highlights/...).",
-        highlightSchema,
-      ),
-    ]);
+    const [{ object: postsData }, { object: highlightsData }] =
+      await Promise.all([
+        generateObject({
+          model,
+          schema: postSchema,
+          prompt: `Extract the last 6 post links from this Instagram profile page HTML. For each post, get the full URL (like https://www.instagram.com/p/...) and the thumbnail image URL. Only include actual post links, not story circles.\n\nHTML:\n${html}`,
+        }),
+        generateObject({
+          model,
+          schema: highlightSchema,
+          prompt: `Extract story highlight circles visible on this Instagram profile page HTML. For each highlight, get its title/label and a link to it (https://www.instagram.com/stories/highlights/...).\n\nHTML:\n${html}`,
+        }),
+      ]);
 
     return {
       username: cleanUsername,
@@ -131,6 +137,6 @@ export async function scrapeInstagramProfile(
       storyHighlights: highlightsData.highlights,
     };
   } finally {
-    await stagehand.close();
+    await browser.close();
   }
 }

@@ -14,8 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     const missingVars = [
-      "BROWSERBASE_API_KEY",
-      "BROWSERBASE_PROJECT_ID",
+      "BROWSERLESS_API_KEY",
       "AI_GATEWAY_API_KEY",
     ].filter((v) => !process.env[v]);
 
