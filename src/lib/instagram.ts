@@ -67,20 +67,27 @@ export async function scrapeInstagramProfile(
 
   const model = gateway("google/gemini-2.5-flash");
 
+  // /stealth uses a purpose-hardened browser binary for maximum bot detection evasion
   const browser = await chromium.connectOverCDP(
-    `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_API_KEY}`,
+    `wss://production-sfo.browserless.io/stealth?token=${process.env.BROWSERLESS_API_KEY}&humanlike=true`,
   );
 
   const context = await browser.newContext({
     userAgent:
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    locale: "en-US",
+    extraHTTPHeaders: {
+      "Accept-Language": "en-US,en;q=0.9",
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    },
   });
   const page = await context.newPage();
 
   try {
     await page.goto(`https://www.instagram.com/${cleanUsername}/`, {
-      waitUntil: "domcontentloaded",
-      timeout: 30000,
+      waitUntil: "load",
+      timeout: 60000,
     });
 
     await page.waitForTimeout(3000);
