@@ -15,6 +15,7 @@ import {
   Terminal,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { formatNumber } from "@/lib/format";
 
 const SHADOWBAN_REASONS = [
   {
@@ -350,10 +351,10 @@ export default function RailgunPage() {
                       : "0 0 20px rgba(255,230,0,0.6), 0 0 40px rgba(255,230,0,0.3)",
                   }}
                 >
-                  {impressions.toLocaleString("en-US")}
+                  {formatNumber(impressions)}
                 </p>
                 <p className="text-[10px] text-text-dim mt-1">
-                  of {TOTAL_IMPRESSIONS.toLocaleString("en-US")} target
+                  of {formatNumber(TOTAL_IMPRESSIONS)} target
                 </p>
 
                 {/* Progress bar */}

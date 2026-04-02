@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { formatNumber } from "@/lib/format";
 
 interface BotNode {
   id: number;
@@ -66,7 +67,7 @@ export default function BotMap() {
           Global Botnet
         </span>
         <span className="text-[10px] text-neon-green font-bold">
-          ACTIVE NODES: {activeCount.toLocaleString("en-US")}
+          ACTIVE NODES: {formatNumber(activeCount)}
         </span>
       </div>
 

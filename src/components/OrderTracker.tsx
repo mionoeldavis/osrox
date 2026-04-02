@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Radio, RefreshCw, Trash2 } from "lucide-react";
+import { formatNumber } from "@/lib/format";
 import { injectTerminalMessage } from "./FakeTerminal";
 
 interface StoredOrder {
@@ -200,7 +201,7 @@ export default function OrderTracker({ refreshTrigger }: OrderTrackerProps) {
                       {progress(order)}%
                     </span>
                     <span className="text-[10px] text-text-dim tabular-nums">
-                      {order.quantity.toLocaleString("en-US")}
+                      {formatNumber(order.quantity)}
                     </span>
                   </div>
                 </motion.div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Server, Activity, Cpu, Globe } from "lucide-react";
+import { formatNumber } from "@/lib/format";
 
 interface Stat {
   icon: typeof Server;
@@ -15,13 +16,13 @@ const STATS: Stat[] = [
   {
     icon: Server,
     label: "NODES",
-    getValue: () => (1200000 + Math.floor(Math.random() * 50000)).toLocaleString("en-US"),
+    getValue: () => formatNumber(1200000 + Math.floor(Math.random() * 50000)),
     color: "text-neon-green",
   },
   {
     icon: Activity,
     label: "OPS/SEC",
-    getValue: () => (45000 + Math.floor(Math.random() * 15000)).toLocaleString("en-US"),
+    getValue: () => formatNumber(45000 + Math.floor(Math.random() * 15000)),
     color: "text-neon-cyan",
   },
   {

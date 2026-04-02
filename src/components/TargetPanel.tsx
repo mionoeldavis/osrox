@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, Users, Heart, MessageCircle, Eye, Zap, Loader2 } from "lucide-react";
+import { formatNumber } from "@/lib/format";
 import { injectTerminalMessage } from "./FakeTerminal";
 import type { ServiceCategory } from "@/lib/services";
 import type { CategorizedService } from "@/lib/services";
@@ -63,8 +64,8 @@ export default function TargetPanel({ onOrderPlaced }: TargetPanelProps) {
 
     const cleanTarget = target.replace("@", "").trim();
 
-    injectTerminalMessage(`[C2] NEW MISSION — Target: ${cleanTarget} | Type: ${selectedCategory.toUpperCase()} | Qty: ${quantity.toLocaleString("en-US")}`);
-    injectTerminalMessage(`[SWARM] Allocating ${quantity.toLocaleString("en-US")} bots for operation...`);
+    injectTerminalMessage(`[C2] NEW MISSION — Target: ${cleanTarget} | Type: ${selectedCategory.toUpperCase()} | Qty: ${formatNumber(quantity)}`);
+    injectTerminalMessage(`[SWARM] Allocating ${formatNumber(quantity)} bots for operation...`);
 
     await new Promise((r) => setTimeout(r, 1500));
 
@@ -95,7 +96,7 @@ export default function TargetPanel({ onOrderPlaced }: TargetPanelProps) {
         injectTerminalMessage(`[ERROR] Mission failed — ${data.error}`);
         setError(data.error);
       } else {
-        injectTerminalMessage(`[SWARM] ✓ DEPLOYED — Order #${data.order} — ${quantity.toLocaleString("en-US")} bots en route to @${cleanTarget}`);
+        injectTerminalMessage(`[SWARM] ✓ DEPLOYED — Order #${data.order} — ${formatNumber(quantity)} bots en route to @${cleanTarget}`);
         injectTerminalMessage(`[C2] Estimated completion: ${Math.ceil(quantity / 500)} minutes`);
 
         const orders: StoredOrder[] = JSON.parse(localStorage.getItem("osrox_orders") || "[]");
@@ -189,7 +190,7 @@ export default function TargetPanel({ onOrderPlaced }: TargetPanelProps) {
 
       <div>
         <label className="text-[10px] text-text-dim tracking-widest uppercase mb-1 block">
-          Bot Count: {quantity.toLocaleString("en-US")}
+          Bot Count: {formatNumber(quantity)}
         </label>
         <input
           type="range"

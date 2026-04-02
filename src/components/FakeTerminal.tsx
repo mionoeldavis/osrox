@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { formatNumber } from "@/lib/format";
 
 const IP_PREFIXES = [
   "185.220", "91.132", "45.153", "103.214", "178.62",
@@ -14,7 +15,7 @@ const ACTIONS = [
   (id: string, ip: string) => `[BOT-${id}] Connected from ${ip}`,
   (id: string) => `[NODE-${REGIONS[Math.floor(Math.random() * REGIONS.length)]}-${id}] Task acknowledged`,
   (id: string, ip: string) => `[BOT-${id}] Proxy rotated → ${ip}`,
-  () => `[SWARM] Heartbeat OK — ${(1200000 + Math.floor(Math.random() * 50000)).toLocaleString("en-US")} active`,
+  () => `[SWARM] Heartbeat OK — ${formatNumber(1200000 + Math.floor(Math.random() * 50000))} active`,
   (id: string) => `[BOT-${id}] Session refreshed — cookies valid`,
   (id: string) => `[NODE-${REGIONS[Math.floor(Math.random() * REGIONS.length)]}-${id}] Dispatching batch #${Math.floor(Math.random() * 9999)}`,
   () => `[C2] Encrypted channel verified — latency ${Math.floor(Math.random() * 50 + 5)}ms`,
