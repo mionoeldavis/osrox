@@ -1,0 +1,16 @@
+---
+description: Git workflow — always commit and push changes
+alwaysApply: true
+---
+
+# Git Workflow
+
+After completing any task that modifies files, **always commit and push**:
+
+1. `git add` all changed files (do not leave uncommitted work behind).
+2. Write a concise commit message: imperative mood, explain *why* not *what*.
+3. `git push` to the remote so changes are on GitHub immediately.
+
+If the repo has no remote yet, prompt the user to set one up before pushing.
+
+Never force-push to `main`/`master` without explicit user approval.

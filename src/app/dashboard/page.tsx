@@ -8,6 +8,7 @@ import TargetPanel from "@/components/TargetPanel";
 import BotMap from "@/components/BotMap";
 import FakeTerminal from "@/components/FakeTerminal";
 import OrderTracker from "@/components/OrderTracker";
+import InstagramRecon from "@/components/InstagramRecon";
 
 
 export default function DashboardPage() {
@@ -27,15 +28,18 @@ export default function DashboardPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
-          {/* Left column: Target Panel + Balance */}
+          {/* Left column: Target Panel + Instagram Recon */}
           <motion.div
             className="lg:col-span-4 flex flex-col gap-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="flex-1 min-h-[400px]">
+            <div className="min-h-[400px]">
               <TargetPanel onOrderPlaced={() => setOrderRefresh((c) => c + 1)} />
+            </div>
+            <div className="min-h-[400px]">
+              <InstagramRecon />
             </div>
           </motion.div>
 

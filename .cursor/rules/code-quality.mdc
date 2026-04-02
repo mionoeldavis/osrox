@@ -1,0 +1,33 @@
+---
+description: Code quality and standards for this Next.js / React / TypeScript project
+alwaysApply: true
+---
+
+# Code Quality Standards
+
+## TypeScript
+- Strict mode is on — never use `any`. Prefer explicit types or inferred generics.
+- Use `@/*` path aliases instead of relative imports deeper than one level.
+- Prefer `const` over `let`; never use `var`.
+
+## React / Next.js
+- Functional components only. Use hooks for state and side effects.
+- Colocate component-specific types in the same file.
+- Keep components under ~150 lines; extract logic into custom hooks or utils.
+- Use server components by default; add `"use client"` only when the component needs browser APIs, state, or event handlers.
+
+## Styling
+- Use Tailwind CSS utility classes. Avoid inline `style` props and separate CSS files.
+- Keep class lists readable — extract to variables or `cn()` helper when they exceed ~5 utilities.
+
+## Error Handling
+- Never swallow errors. Always log or re-throw with context.
+- API routes must return proper HTTP status codes and structured JSON errors.
+
+## File Organization
+- Pages in `src/app/`, components in `src/components/`, utilities in `src/lib/`.
+- One exported component per file. Name the file to match the export.
+
+## Before Finishing
+- Run `npm run lint` and fix all errors before committing.
+- Run `npm run build` to catch type errors before pushing.

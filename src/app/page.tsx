@@ -2,29 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import PasswordScreen from "@/components/PasswordScreen";
 import BootScreen from "@/components/BootScreen";
+
+type Phase = "loading" | "password" | "boot";
 
 export default function Home() {
   const router = useRouter();
-  const [showBoot, setShowBoot] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [phase, setPhase] = useState<Phase>("loading");
 
   useEffect(() => {
     const hasBooted = sessionStorage.getItem("osrox_booted");
     if (hasBooted) {
       router.replace("/dashboard");
-    } else {
-      setShowBoot(true);
-      setReady(true);
+      return;
     }
+
+    const hasAuth = sessionStorage.getItem("osrox_auth");
+    setPhase(hasAuth ? "boot" : "password");
   }, [router]);
+
+  const handleAuthSuccess = () => {
+    setPhase("boot");
+  };
 
   const handleBootComplete = () => {
     sessionStorage.setItem("osrox_booted", "1");
     router.replace("/dashboard");
   };
 
-  if (!ready) {
+  if (phase === "loading") {
     return (
       <div className="h-full bg-black flex items-center justify-center">
         <div className="text-neon-green text-glow-green text-sm animate-pulse">
@@ -34,5 +41,9 @@ export default function Home() {
     );
   }
 
-  return showBoot ? <BootScreen onComplete={handleBootComplete} /> : null;
+  if (phase === "password") {
+    return <PasswordScreen onSuccess={handleAuthSuccess} />;
+  }
+
+  return <BootScreen onComplete={handleBootComplete} />;
 }
