@@ -14,6 +14,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { InstagramProfile } from "@/lib/instagram";
+import { proxyImg } from "@/lib/proxyImg";
 
 type ScanState = "idle" | "scanning" | "done" | "error";
 
@@ -140,12 +141,11 @@ export default function InstagramRecon() {
           >
             {/* Profile Header */}
             <div className="flex items-start gap-3 border border-border-dim p-3 bg-black/30">
-              {profile.profilePicUrl ? (
+              {proxyImg(profile.profilePicUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={profile.profilePicUrl}
+                  src={proxyImg(profile.profilePicUrl)!}
                   alt={profile.username}
-                  referrerPolicy="no-referrer"
                   className="w-12 h-12 rounded-full border border-neon-cyan/30 shrink-0 object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
@@ -237,12 +237,11 @@ export default function InstagramRecon() {
                         className="flex items-center gap-2 border border-border-dim bg-black/20 px-2.5 py-1.5 text-[11px] text-neon-green hover:border-neon-green/40 hover:bg-neon-green/5 transition-all group"
                       >
                         <div className="w-7 h-7 shrink-0 relative border border-border-dim bg-bg-card flex items-center justify-center">
-                          {post.thumbnail && (
+                          {proxyImg(post.thumbnail) && (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
-                              src={post.thumbnail}
+                              src={proxyImg(post.thumbnail)!}
                               alt=""
-                              referrerPolicy="no-referrer"
                               className="absolute inset-0 w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";

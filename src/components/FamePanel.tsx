@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { formatNumber } from "@/lib/format";
 import { useFame } from "@/lib/useFame";
+import { proxyImg } from "@/lib/proxyImg";
 
 const PRESETS = [
   { label: "1K", value: 1_000 },
@@ -200,12 +201,11 @@ export default function FamePanel() {
                   exit={{ opacity: 0 }}
                   className="flex items-start gap-3 border border-neon-cyan/20 bg-neon-cyan/5 p-3"
                 >
-                  {profile.profilePicUrl ? (
+                  {proxyImg(profile.profilePicUrl) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={profile.profilePicUrl}
+                      src={proxyImg(profile.profilePicUrl)!}
                       alt={profile.username}
-                      referrerPolicy="no-referrer"
                       className="w-10 h-10 rounded-full border border-neon-cyan/30 shrink-0 object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -258,12 +258,11 @@ export default function FamePanel() {
                     key={i}
                     className="relative aspect-square border border-border-dim bg-bg-card overflow-hidden flex items-center justify-center"
                   >
-                    {post.thumbnail && (
+                    {proxyImg(post.thumbnail) && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={post.thumbnail}
+                        src={proxyImg(post.thumbnail)!}
                         alt=""
-                        referrerPolicy="no-referrer"
                         className="absolute inset-0 w-full h-full object-cover opacity-60"
                         onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
