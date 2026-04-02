@@ -63,8 +63,8 @@ export default function TargetPanel({ onOrderPlaced }: TargetPanelProps) {
 
     const cleanTarget = target.replace("@", "").trim();
 
-    injectTerminalMessage(`[C2] NEW MISSION — Target: ${cleanTarget} | Type: ${selectedCategory.toUpperCase()} | Qty: ${quantity.toLocaleString()}`);
-    injectTerminalMessage(`[SWARM] Allocating ${quantity.toLocaleString()} bots for operation...`);
+    injectTerminalMessage(`[C2] NEW MISSION — Target: ${cleanTarget} | Type: ${selectedCategory.toUpperCase()} | Qty: ${quantity.toLocaleString("en-US")}`);
+    injectTerminalMessage(`[SWARM] Allocating ${quantity.toLocaleString("en-US")} bots for operation...`);
 
     await new Promise((r) => setTimeout(r, 1500));
 
@@ -95,7 +95,7 @@ export default function TargetPanel({ onOrderPlaced }: TargetPanelProps) {
         injectTerminalMessage(`[ERROR] Mission failed — ${data.error}`);
         setError(data.error);
       } else {
-        injectTerminalMessage(`[SWARM] ✓ DEPLOYED — Order #${data.order} — ${quantity.toLocaleString()} bots en route to @${cleanTarget}`);
+        injectTerminalMessage(`[SWARM] ✓ DEPLOYED — Order #${data.order} — ${quantity.toLocaleString("en-US")} bots en route to @${cleanTarget}`);
         injectTerminalMessage(`[C2] Estimated completion: ${Math.ceil(quantity / 500)} minutes`);
 
         const orders: StoredOrder[] = JSON.parse(localStorage.getItem("osrox_orders") || "[]");
@@ -189,7 +189,7 @@ export default function TargetPanel({ onOrderPlaced }: TargetPanelProps) {
 
       <div>
         <label className="text-[10px] text-text-dim tracking-widest uppercase mb-1 block">
-          Bot Count: {quantity.toLocaleString()}
+          Bot Count: {quantity.toLocaleString("en-US")}
         </label>
         <input
           type="range"
