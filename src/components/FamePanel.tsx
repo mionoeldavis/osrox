@@ -92,198 +92,234 @@ export default function FamePanel() {
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="max-w-4xl mx-auto flex flex-col gap-6"
-    >
+    <>
       {/* Header */}
-      <div className="card-glow p-5 flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="card-glow p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+      >
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Star className="w-5 h-5 text-neon-yellow" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-neon-yellow status-pulse" />
+            <Star
+              className="w-7 h-7 text-neon-yellow"
+              style={{ filter: "drop-shadow(0 0 8px rgba(255,230,0,0.7))" }}
+            />
+            {isDeploying && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-neon-yellow animate-ping" />
+            )}
           </div>
           <div>
-            <h1 className="text-neon-yellow text-glow-green font-bold tracking-[0.3em] text-lg uppercase">
-              Make Famous
+            <h1
+              className="text-neon-yellow text-xl font-bold tracking-[0.4em]"
+              style={{ textShadow: "0 0 12px rgba(255,230,0,0.6), 0 0 24px rgba(255,230,0,0.3)" }}
+            >
+              MAKE FAMOUS
             </h1>
-            <p className="text-[10px] text-text-dim tracking-widest mt-0.5">
+            <p className="text-text-dim text-[10px] tracking-widest uppercase mt-0.5">
               Auto-boost followers + engagement across all posts
             </p>
           </div>
         </div>
-        {isReady && (
+
+        <div className="flex items-center gap-3">
+          {isReady && (
+            <button
+              onClick={reset}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-border-dim text-text-dim text-[10px] tracking-widest hover:border-neon-green/30 hover:text-neon-green/70 transition-colors"
+            >
+              <RotateCcw className="w-3 h-3" />
+              RESET
+            </button>
+          )}
+          <div className="flex items-center gap-2 text-[10px] text-text-dim">
+            {isDeploying ? (
+              <><span className="w-1.5 h-1.5 rounded-full bg-neon-yellow animate-ping" /><span className="text-neon-yellow">DEPLOYING...</span></>
+            ) : isDone ? (
+              <><span className="w-1.5 h-1.5 rounded-full bg-neon-green" /><span className="text-neon-green">COMPLETE</span></>
+            ) : (
+              <><span className="w-1.5 h-1.5 rounded-full bg-text-dim" /><span>STANDBY</span></>
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Target Acquisition */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.05 }}
+        className="card-glow p-5 space-y-4"
+      >
+        <div className="flex items-center gap-2">
+          <Search className="w-4 h-4 text-neon-cyan" />
+          <span className="text-[10px] text-neon-cyan tracking-widest font-bold uppercase">
+            Step 1 — Target Profile
+          </span>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !isScanning && handleScan()}
+            placeholder="@username"
+            disabled={isScanning || isReady}
+            className="flex-1 bg-black/50 border border-border-dim text-neon-cyan placeholder:text-text-dim px-3 py-2.5 text-sm focus:outline-none focus:border-neon-cyan/50 transition-colors disabled:opacity-40"
+          />
           <button
-            onClick={reset}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-border-dim text-text-dim text-[10px] tracking-widest hover:border-neon-green/30 hover:text-neon-green/70 transition-colors"
+            onClick={handleScan}
+            disabled={isScanning || isReady || !username.trim()}
+            className={`px-4 py-2 border text-xs font-bold tracking-widest transition-all flex items-center gap-1.5 ${
+              isScanning
+                ? "border-neon-cyan/30 text-neon-cyan/50 cursor-not-allowed"
+                : isReady || !username.trim()
+                  ? "border-border-dim text-text-dim cursor-not-allowed"
+                  : "border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan/10 glow-cyan cursor-pointer"
+            }`}
           >
-            <RotateCcw className="w-3 h-3" />
-            RESET
+            {isScanning ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Search className="w-3.5 h-3.5" />
+            )}
+            {isScanning ? "SCANNING" : "SCAN"}
           </button>
-        )}
-      </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Scan + Profile */}
-        <div className="flex flex-col gap-4">
-          {/* Step 1: Target Input */}
-          <div className="card-glow p-5 flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-neon-cyan" />
-              <span className="text-[10px] text-neon-cyan tracking-widest font-bold uppercase">
-                Step 1 — Target Profile
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !isScanning && handleScan()}
-                placeholder="@username"
-                disabled={isScanning || isReady}
-                className="flex-1 bg-black/50 border border-border-dim text-neon-cyan placeholder:text-text-dim px-3 py-2.5 text-sm focus:outline-none focus:border-neon-cyan/50 transition-colors disabled:opacity-40"
-              />
-              <button
-                onClick={handleScan}
-                disabled={isScanning || isReady || !username.trim()}
-                className={`px-4 py-2 border text-xs font-bold tracking-widest transition-all flex items-center gap-1.5 ${
-                  isScanning
-                    ? "border-neon-cyan/30 text-neon-cyan/50 cursor-not-allowed"
-                    : isReady || !username.trim()
-                      ? "border-border-dim text-text-dim cursor-not-allowed"
-                      : "border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan/10 glow-cyan cursor-pointer"
-                }`}
-              >
-                {isScanning ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Search className="w-3.5 h-3.5" />
-                )}
-                {isScanning ? "SCANNING" : "SCAN"}
-              </button>
-            </div>
+        <AnimatePresence mode="wait">
+          {isScanning && (
+            <motion.div
+              key="scanning"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center gap-2 py-6 text-neon-cyan/70"
+            >
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <p className="text-[11px] tracking-widest">SCANNING TARGET...</p>
+              <p className="text-[10px] text-text-dim">This may take 15–30 seconds</p>
+            </motion.div>
+          )}
 
-            <AnimatePresence mode="wait">
-              {isScanning && (
-                <motion.div
-                  key="scanning"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex flex-col items-center gap-2 py-6 text-neon-cyan/70"
-                >
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <p className="text-[11px] tracking-widest">SCANNING TARGET...</p>
-                  <p className="text-[10px] text-text-dim">This may take 15–30 seconds</p>
-                </motion.div>
-              )}
+          {isError && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="text-[11px] text-neon-red border border-neon-red/30 bg-neon-red/5 px-3 py-2"
+            >
+              ERROR: {errorMsg}
+            </motion.div>
+          )}
 
-              {isError && (
-                <motion.div
-                  key="error"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="text-[11px] text-neon-red border border-neon-red/30 bg-neon-red/5 px-3 py-2"
-                >
-                  ERROR: {errorMsg}
-                </motion.div>
-              )}
-
-              {isReady && profile && (
-                <motion.div
-                  key="profile"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-start gap-3 border border-neon-cyan/20 bg-neon-cyan/5 p-3"
-                >
-                  {proxyImg(profile.profilePicUrl) ? (
+          {isReady && profile && (
+            <motion.div
+              key="profile"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="border border-neon-cyan/30 bg-black/30 p-3 space-y-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className="relative w-10 h-10 shrink-0 rounded-full border border-neon-cyan/40 bg-bg-card flex items-center justify-center overflow-hidden">
+                  {proxyImg(profile.profilePicUrl) && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={proxyImg(profile.profilePicUrl)!}
                       alt={profile.username}
-                      className="w-10 h-10 rounded-full border border-neon-cyan/30 shrink-0 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.style.display = "none"; }}
                     />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full border border-border-dim bg-bg-card shrink-0 flex items-center justify-center">
-                      <Users className="w-4 h-4 text-text-dim" />
-                    </div>
                   )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm text-neon-cyan font-bold">@{profile.username}</span>
-                      {profile.isVerified && <CheckCircle className="w-3.5 h-3.5 text-neon-cyan shrink-0" />}
-                      {profile.isPrivate && <ShieldAlert className="w-3.5 h-3.5 text-neon-yellow shrink-0" />}
-                    </div>
-                    <div className="flex gap-4 mt-1">
-                      <span className="text-[10px] text-text-dim">
-                        <span className="text-neon-green">{profile.followersCount ?? "?"}</span> followers
-                      </span>
-                      <span className="text-[10px] text-text-dim">
-                        <span className="text-neon-green">{profile.postsCount ?? "?"}</span> posts
-                      </span>
-                    </div>
-                    {profile.isPrivate && (
-                      <p className="text-[10px] text-neon-yellow mt-1">
-                        Private — post engagement will be skipped
-                      </p>
-                    )}
+                  <Users className="w-4 h-4 text-text-dim" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm text-neon-cyan font-bold">@{profile.username}</span>
+                    {profile.isVerified && <CheckCircle className="w-3 h-3 text-neon-cyan shrink-0" />}
+                    {profile.isPrivate && <ShieldAlert className="w-3 h-3 text-neon-yellow shrink-0" />}
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Post thumbnails */}
-          {isReady && profile && !profile.isPrivate && profile.posts.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="card-glow p-4 flex flex-col gap-3"
-            >
-              <span className="text-[10px] text-neon-green tracking-widest font-bold uppercase">
-                {profile.posts.length} Posts Targeted
-              </span>
-              <div className="grid grid-cols-3 gap-1.5">
-                {profile.posts.map((post, i) => (
-                  <div
-                    key={i}
-                    className="relative aspect-square border border-border-dim bg-bg-card overflow-hidden flex items-center justify-center"
-                  >
-                    {proxyImg(post.thumbnail) && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={proxyImg(post.thumbnail)!}
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover opacity-60"
-                        onError={(e) => { e.currentTarget.style.display = "none"; }}
-                      />
-                    )}
-                    <span className="relative z-10 text-[9px] text-neon-green/60">{i + 1}</span>
-                    {isDone && (
-                      <div className="absolute inset-0 z-20 bg-neon-green/20 flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-neon-green" />
-                      </div>
-                    )}
+                  {profile.fullName && (
+                    <p className="text-[10px] text-text-dim truncate">{profile.fullName}</p>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {[
+                  { label: "POSTS", value: profile.postsCount },
+                  { label: "FOLLOWERS", value: profile.followersCount },
+                  { label: "FOLLOWING", value: profile.followingCount },
+                ].map(({ label, value }) => (
+                  <div key={label} className="border border-neon-cyan/20 bg-black/20 py-1.5 px-1">
+                    <p className="text-xs text-neon-cyan font-bold tabular-nums">{value ?? "—"}</p>
+                    <p className="text-[9px] text-text-dim tracking-widest mt-0.5">{label}</p>
                   </div>
                 ))}
               </div>
+              {profile.isPrivate && (
+                <p className="text-[10px] text-neon-yellow flex items-center gap-1.5">
+                  <ShieldAlert className="w-3 h-3 shrink-0" />
+                  Private — post engagement will be skipped
+                </p>
+              )}
             </motion.div>
           )}
-        </div>
+        </AnimatePresence>
+      </motion.div>
 
-        {/* Right: Fame Level + Breakdown + Deploy */}
-        <div className="flex flex-col gap-4">
-          {/* Step 2: Fame Level */}
-          <div className="card-glow p-5 flex flex-col gap-4">
+      {/* Post thumbnails */}
+      <AnimatePresence>
+        {isReady && profile && !profile.isPrivate && profile.posts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.35 }}
+            className="card-glow p-5 space-y-3"
+          >
+            <span className="text-[10px] text-neon-green tracking-widest font-bold uppercase">
+              {profile.posts.length} Posts Targeted
+            </span>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {profile.posts.map((post, i) => (
+                <div
+                  key={i}
+                  className="relative aspect-square border border-border-dim bg-bg-card overflow-hidden flex items-center justify-center"
+                >
+                  {proxyImg(post.thumbnail) && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={proxyImg(post.thumbnail)!}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover opacity-60"
+                      onError={(e) => { e.currentTarget.style.display = "none"; }}
+                    />
+                  )}
+                  <span className="relative z-10 text-[9px] text-neon-green/60">{i + 1}</span>
+                  {isDone && (
+                    <div className="absolute inset-0 z-20 bg-neon-green/20 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-neon-green" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Fame Level + Breakdown side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+        <motion.div
+          className="lg:col-span-5"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <div className="card-glow p-5 space-y-4 h-full">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-neon-yellow" />
               <span className="text-[10px] text-neon-yellow tracking-widest font-bold uppercase">
@@ -315,7 +351,6 @@ export default function FamePanel() {
               </div>
             </div>
 
-            {/* Presets */}
             <div className="flex flex-wrap gap-1.5">
               {PRESETS.map(({ label, value }) => (
                 <button
@@ -333,9 +368,15 @@ export default function FamePanel() {
               ))}
             </div>
           </div>
+        </motion.div>
 
-          {/* Breakdown */}
-          <div className="card-glow p-5 flex flex-col gap-3">
+        <motion.div
+          className="lg:col-span-7"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <div className="card-glow p-5 space-y-3 h-full">
             <span className="text-[10px] text-text-dim tracking-widest uppercase font-bold">
               Auto-Calculated Breakdown
             </span>
@@ -361,81 +402,91 @@ export default function FamePanel() {
               </div>
             )}
           </div>
-
-          {/* Step 3: Deploy */}
-          <div className="card-glow p-5 flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-neon-green" />
-              <span className="text-[10px] text-neon-green tracking-widest font-bold uppercase">
-                Step 3 — Deploy
-              </span>
-            </div>
-
-            <AnimatePresence mode="wait">
-              {isDone ? (
-                <motion.div
-                  key="done"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center gap-2 py-4 border border-neon-green/40 bg-neon-green/5"
-                >
-                  <CheckCircle className="w-6 h-6 text-neon-green" />
-                  <span className="text-neon-green font-bold tracking-widest text-sm text-glow-green">
-                    FAME PROTOCOL COMPLETE
-                  </span>
-                  <span className="text-[10px] text-text-dim">
-                    {metrics.totalOrders} orders deployed for @{profile?.username}
-                  </span>
-                </motion.div>
-              ) : isDeploying ? (
-                <motion.div
-                  key="deploying"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex flex-col gap-3"
-                >
-                  <div className="flex items-center justify-between text-[10px] text-text-dim">
-                    <span className="tracking-widest">DEPLOYING...</span>
-                    <span className="text-neon-green font-bold">
-                      {progress.current}/{progress.total}
-                    </span>
-                  </div>
-                  <div className="h-1.5 bg-border-dim w-full">
-                    <motion.div
-                      className="h-full bg-neon-green glow-green"
-                      initial={{ width: "0%" }}
-                      animate={{ width: `${progressPct}%` }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </div>
-                  <p className="text-[10px] text-neon-green/70 tracking-widest">{progress.message}</p>
-                </motion.div>
-              ) : (
-                <motion.button
-                  key="deploy"
-                  onClick={handleDeploy}
-                  disabled={fameState !== "ready"}
-                  whileTap={{ scale: 0.98 }}
-                  className={`w-full py-4 border text-sm font-bold tracking-[0.3em] transition-all flex items-center justify-center gap-2 ${
-                    fameState !== "ready"
-                      ? "border-border-dim text-text-dim cursor-not-allowed"
-                      : "border-neon-green/50 text-neon-green hover:bg-neon-green/10 pulse-glow cursor-pointer"
-                  }`}
-                >
-                  <Star className="w-4 h-4" />
-                  MAKE FAMOUS
-                </motion.button>
-              )}
-            </AnimatePresence>
-
-            {!isReady && !isDeploying && !isDone && (
-              <p className="text-[10px] text-text-dim text-center">
-                Scan a profile first to enable deployment
-              </p>
-            )}
-          </div>
-        </div>
+        </motion.div>
       </div>
-    </motion.div>
+
+      {/* Deploy */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="card-glow p-5 space-y-4"
+      >
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-neon-green" />
+          <span className="text-[10px] text-neon-green tracking-widest font-bold uppercase">
+            Step 3 — Deploy
+          </span>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {isDone ? (
+            <motion.div
+              key="done"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center gap-2 py-4 border border-neon-green/40 bg-neon-green/5"
+            >
+              <CheckCircle className="w-6 h-6 text-neon-green" />
+              <span className="text-neon-green font-bold tracking-widest text-sm text-glow-green">
+                FAME PROTOCOL COMPLETE
+              </span>
+              <span className="text-[10px] text-text-dim">
+                {metrics.totalOrders} orders deployed for @{profile?.username}
+              </span>
+            </motion.div>
+          ) : isDeploying ? (
+            <motion.div
+              key="deploying"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col gap-3"
+            >
+              <div className="flex items-center justify-between text-[10px] text-text-dim">
+                <span className="tracking-widest">DEPLOYING...</span>
+                <span className="text-neon-green font-bold">
+                  {progress.current}/{progress.total}
+                </span>
+              </div>
+              <div className="h-1.5 bg-border-dim w-full">
+                <motion.div
+                  className="h-full bg-neon-green glow-green"
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+              <p className="text-[10px] text-neon-green/70 tracking-widest">{progress.message}</p>
+            </motion.div>
+          ) : (
+            <motion.button
+              key="deploy"
+              onClick={handleDeploy}
+              disabled={fameState !== "ready"}
+              whileTap={fameState === "ready" ? { scale: 0.98 } : {}}
+              className={`w-full py-3 border text-sm font-bold tracking-widest transition-all flex items-center justify-center gap-2 ${
+                fameState !== "ready"
+                  ? "border-border-dim text-text-dim cursor-not-allowed"
+                  : "border-neon-green/50 text-neon-green hover:bg-neon-green/10 cursor-pointer"
+              }`}
+              style={
+                fameState === "ready"
+                  ? { boxShadow: "0 0 8px rgba(0,255,65,0.3), 0 0 30px rgba(0,255,65,0.1)" }
+                  : {}
+              }
+            >
+              <Star className="w-4 h-4" />
+              MAKE FAMOUS
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {!isReady && !isDeploying && !isDone && (
+          <p className="text-[10px] text-text-dim text-center">
+            Scan a profile first to enable deployment
+          </p>
+        )}
+      </motion.div>
+    </>
   );
 }
