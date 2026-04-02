@@ -13,10 +13,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const missingVars = [
-      "BROWSERLESS_API_KEY",
-      "AI_GATEWAY_API_KEY",
-    ].filter((v) => !process.env[v]);
+    const missingVars = ["BRIGHTDATA_API_KEY"].filter(
+      (v) => !process.env[v],
+    );
 
     if (missingVars.length > 0) {
       return NextResponse.json(
