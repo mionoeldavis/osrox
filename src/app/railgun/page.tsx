@@ -11,6 +11,8 @@ import {
   ChevronRight,
   Loader2,
   Info,
+  Target,
+  AtSign,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
@@ -38,14 +40,19 @@ const SHADOWBAN_REASONS = [
 ];
 
 export default function RailgunPage() {
+  const [target, setTarget] = useState("");
   const [firing, setFiring] = useState(false);
   const [fired, setFired] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [firedTarget, setFiredTarget] = useState("");
+
+  const cleanTarget = target.replace("@", "").trim();
 
   const handleFire = async () => {
-    if (firing || fired) return;
+    if (firing || fired || !cleanTarget) return;
     setFiring(true);
     setProgress(0);
+    setFiredTarget(cleanTarget);
 
     for (let i = 0; i <= 100; i += 4) {
       await new Promise((r) => setTimeout(r, 60));
@@ -60,6 +67,8 @@ export default function RailgunPage() {
   const handleReset = () => {
     setFired(false);
     setProgress(0);
+    setTarget("");
+    setFiredTarget("");
   };
 
   return (
@@ -91,6 +100,63 @@ export default function RailgunPage() {
             </div>
           </div>
 
+          <div className="flex items-center gap-2 text-[10px] text-text-dim">
+            {firing ? (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-neon-yellow animate-ping" />
+                <span className="text-neon-yellow">FIRING...</span>
+              </>
+            ) : fired ? (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-neon-green" />
+                <span className="text-neon-green">PAYLOAD DELIVERED</span>
+              </>
+            ) : (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-text-dim" />
+                <span>STANDBY</span>
+              </>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Target input */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="card-glow p-5 space-y-4"
+        >
+          <div className="flex items-center gap-2">
+            <Target className="w-4 h-4 text-neon-yellow" />
+            <span className="text-[10px] text-neon-yellow tracking-widest font-bold uppercase">
+              Target Acquisition
+            </span>
+          </div>
+
+          <div>
+            <label className="text-[10px] text-text-dim tracking-widest uppercase mb-1.5 block">
+              Instagram Username
+            </label>
+            <div className="relative">
+              <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-dim pointer-events-none" />
+              <input
+                type="text"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleFire()}
+                placeholder="username or @username"
+                disabled={firing || fired}
+                className="w-full bg-black/50 border border-border-dim text-neon-yellow placeholder:text-text-dim pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-neon-yellow/50 transition-colors disabled:opacity-40"
+              />
+            </div>
+            {cleanTarget && !fired && (
+              <p className="text-[10px] text-text-dim mt-1">
+                Target locked: <span className="text-neon-yellow">@{cleanTarget}</span>
+              </p>
+            )}
+          </div>
+
           <AnimatePresence mode="wait">
             {fired ? (
               <motion.button
@@ -99,9 +165,9 @@ export default function RailgunPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={handleReset}
-                className="px-6 py-2.5 border border-neon-green/50 text-neon-green text-sm font-bold tracking-widest hover:bg-neon-green/10 transition-all cursor-pointer"
+                className="w-full py-3 border border-neon-green/50 text-neon-green text-sm font-bold tracking-widest hover:bg-neon-green/10 transition-all cursor-pointer"
               >
-                RESET
+                RESET — NEW TARGET
               </motion.button>
             ) : (
               <motion.button
@@ -110,15 +176,17 @@ export default function RailgunPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={handleFire}
-                disabled={firing}
-                whileTap={{ scale: 0.97 }}
-                className={`px-8 py-2.5 border text-sm font-bold tracking-widest transition-all flex items-center gap-2 ${
+                disabled={firing || !cleanTarget}
+                whileTap={{ scale: 0.98 }}
+                className={`w-full py-3 border text-sm font-bold tracking-widest transition-all flex items-center justify-center gap-2 ${
                   firing
                     ? "border-neon-yellow/50 text-neon-yellow cursor-not-allowed"
+                    : !cleanTarget
+                    ? "border-border-dim text-text-dim cursor-not-allowed"
                     : "border-neon-yellow/60 text-neon-yellow hover:bg-neon-yellow/10 cursor-pointer"
                 }`}
                 style={
-                  !firing
+                  cleanTarget && !firing
                     ? { boxShadow: "0 0 8px rgba(255,230,0,0.3), 0 0 30px rgba(255,230,0,0.1)" }
                     : {}
                 }
@@ -126,12 +194,12 @@ export default function RailgunPage() {
                 {firing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    FIRING...
+                    FIRING ON @{firedTarget}...
                   </>
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />
-                    RAILGUN
+                    FIRE RAILGUN
                   </>
                 )}
               </motion.button>
@@ -169,7 +237,7 @@ export default function RailgunPage() {
                   animate={{ opacity: 1 }}
                   className="text-[10px] text-neon-green"
                 >
-                  ✓ 2,400,000+ impressions injected — payload complete
+                  ✓ 2,400,000+ impressions injected on @{firedTarget} — payload complete
                 </motion.p>
               )}
             </motion.div>
