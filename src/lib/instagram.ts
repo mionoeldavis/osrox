@@ -35,6 +35,7 @@ const brightDataHighlightSchema = z.object({
 });
 
 const brightDataProfileSchema = z.object({
+  account: z.string().optional(),
   full_name: z.string().nullable().optional(),
   profile_name: z.string().nullable().optional(),
   biography: z.string().nullable().optional(),
@@ -46,12 +47,13 @@ const brightDataProfileSchema = z.object({
   posts_count: z.number().nullable().optional(),
   posts: z.array(brightDataPostSchema).optional(),
   highlights: z.array(brightDataHighlightSchema).optional(),
+  error: z.string().optional(),
 });
 
 type BrightDataProfile = z.infer<typeof brightDataProfileSchema>;
 
 const BRIGHTDATA_API = "https://api.brightdata.com/datasets/v3";
-const DATASET_ID = "gd_lk5ns7kz21pck8jpis";
+const DATASET_ID = "gd_l1vikfch901nx3by4";
 const POLL_INTERVAL_MS = 5000;
 const POLL_TIMEOUT_MS = 120_000;
 
@@ -125,13 +127,11 @@ export async function scrapeInstagramProfile(
   const cleanUsername = username.replace(/^@/, "").trim();
 
   const res = await fetch(
-    `${BRIGHTDATA_API}/scrape?dataset_id=${DATASET_ID}&format=json`,
+    `${BRIGHTDATA_API}/scrape?dataset_id=${DATASET_ID}&type=discover_new&discover_by=user_name&notify=false&include_errors=true&format=json`,
     {
       method: "POST",
       headers: authHeaders(),
-      body: JSON.stringify({
-        input: [{ url: `https://www.instagram.com/${cleanUsername}/` }],
-      }),
+      body: JSON.stringify({ input: [{ user_name: cleanUsername }] }),
     },
   );
 
@@ -151,6 +151,9 @@ export async function scrapeInstagramProfile(
   const profile = profiles[0];
   if (!profile) {
     throw new Error(`Instagram profile not found: ${cleanUsername}`);
+  }
+  if (profile.error) {
+    throw new Error(`Bright Data scrape error: ${profile.error}`);
   }
 
   return mapProfile(cleanUsername, profile);
