@@ -15,13 +15,13 @@ const STATS: Stat[] = [
   {
     icon: Server,
     label: "NODES",
-    getValue: () => (1200000 + Math.floor(Math.random() * 50000)).toLocaleString(),
+    getValue: () => (1200000 + Math.floor(Math.random() * 50000)).toLocaleString("en-US"),
     color: "text-neon-green",
   },
   {
     icon: Activity,
     label: "OPS/SEC",
-    getValue: () => (45000 + Math.floor(Math.random() * 15000)).toLocaleString(),
+    getValue: () => (45000 + Math.floor(Math.random() * 15000)).toLocaleString("en-US"),
     color: "text-neon-cyan",
   },
   {

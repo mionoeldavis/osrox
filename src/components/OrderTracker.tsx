@@ -200,7 +200,7 @@ export default function OrderTracker({ refreshTrigger }: OrderTrackerProps) {
                       {progress(order)}%
                     </span>
                     <span className="text-[10px] text-text-dim tabular-nums">
-                      {order.quantity.toLocaleString()}
+                      {order.quantity.toLocaleString("en-US")}
                     </span>
                   </div>
                 </motion.div>

@@ -66,7 +66,7 @@ export default function BotMap() {
           Global Botnet
         </span>
         <span className="text-[10px] text-neon-green font-bold">
-          ACTIVE NODES: {activeCount.toLocaleString()}
+          ACTIVE NODES: {activeCount.toLocaleString("en-US")}
         </span>
       </div>
 

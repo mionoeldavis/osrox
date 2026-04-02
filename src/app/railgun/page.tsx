@@ -350,10 +350,10 @@ export default function RailgunPage() {
                       : "0 0 20px rgba(255,230,0,0.6), 0 0 40px rgba(255,230,0,0.3)",
                   }}
                 >
-                  {impressions.toLocaleString()}
+                  {impressions.toLocaleString("en-US")}
                 </p>
                 <p className="text-[10px] text-text-dim mt-1">
-                  of {TOTAL_IMPRESSIONS.toLocaleString()} target
+                  of {TOTAL_IMPRESSIONS.toLocaleString("en-US")} target
                 </p>
 
                 {/* Progress bar */}

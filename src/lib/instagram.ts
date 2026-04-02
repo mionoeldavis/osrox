@@ -1,4 +1,5 @@
-import { Stagehand } from "@browserbasehq/stagehand";
+import { Stagehand, AISdkClient } from "@browserbasehq/stagehand";
+import { createGateway } from "@ai-sdk/gateway";
 import { z } from "zod";
 
 export interface InstagramPost {
@@ -59,11 +60,17 @@ export async function scrapeInstagramProfile(
 ): Promise<InstagramProfile> {
   const cleanUsername = username.replace(/^@/, "").trim();
 
+  const gateway = createGateway({
+    apiKey: process.env.AI_GATEWAY_API_KEY,
+  });
+
   const stagehand = new Stagehand({
     env: "BROWSERBASE",
     apiKey: process.env.BROWSERBASE_API_KEY,
     projectId: process.env.BROWSERBASE_PROJECT_ID,
-    model: "gateway/google/gemini-2.5-flash",
+    llmClient: new AISdkClient({
+      model: gateway("google/gemini-2.5-flash"),
+    }),
     browserbaseSessionCreateParams: {
       browserSettings: {
         advancedStealth: true,
