@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const missingVars = [
       "BROWSERBASE_API_KEY",
       "BROWSERBASE_PROJECT_ID",
-      "MODEL_API_KEY",
+      "AI_GATEWAY_API_KEY",
     ].filter((v) => !process.env[v]);
 
     if (missingVars.length > 0) {

@@ -63,10 +63,7 @@ export async function scrapeInstagramProfile(
     env: "BROWSERBASE",
     apiKey: process.env.BROWSERBASE_API_KEY,
     projectId: process.env.BROWSERBASE_PROJECT_ID,
-    model: {
-      modelName: "google/gemini-2.5-flash",
-      apiKey: process.env.MODEL_API_KEY,
-    },
+    model: "gateway/google/gemini-2.5-flash",
     browserbaseSessionCreateParams: {
       browserSettings: {
         advancedStealth: true,
