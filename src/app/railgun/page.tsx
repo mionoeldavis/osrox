@@ -13,9 +13,14 @@ import {
   Target,
   AtSign,
   Terminal,
+  Users,
+  Loader2,
+  CheckCircle,
+  ShieldAlert,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { formatNumber } from "@/lib/format";
+import type { InstagramProfile } from "@/lib/instagram";
 
 const SHADOWBAN_REASONS = [
   {
@@ -51,7 +56,15 @@ interface LogLine {
   color: LogColor;
 }
 
-function buildSequence(t: string): Array<{ ms: number; text: string; color: LogColor }> {
+function buildSequence(
+  t: string,
+  profile: InstagramProfile | null,
+): Array<{ ms: number; text: string; color: LogColor }> {
+  const posts     = profile?.postsCount    ?? "—";
+  const followers = profile?.followersCount ?? "—";
+  const following = profile?.followingCount ?? "—";
+  const statsLine = `[TARGET]  Posts: ${posts}  |  Followers: ${followers}  |  Following: ${following}`;
+
   return [
     { ms: 0,    text: "[RAILGUN] Payload engine v4.2 — initializing...",              color: "yellow" },
     { ms: 250,  text: "[SYS]     Loading CDN spoof layer... OK",                      color: "dim"    },
@@ -61,7 +74,7 @@ function buildSequence(t: string): Array<{ ms: number; text: string; color: LogC
     { ms: 1300, text: "[SWARM]   Region map: US-EAST ██ EU-WEST ██ ASIA ██ LATAM ██", color: "cyan"   },
     { ms: 1600, text: `[TARGET]  Resolving @${t}...`,                                 color: "dim"    },
     { ms: 1950, text: `[TARGET]  Profile confirmed ✓  @${t}`,                        color: "yellow" },
-    { ms: 2150, text: `[TARGET]  Posts: 234  |  Followers: 12.4K  |  Following: 891`, color: "dim"    },
+    { ms: 2150, text: statsLine,                                                       color: "dim"    },
     { ms: 2400, text: "[BOT-NET] Assigning 847 bots to impression queue...",           color: "dim"    },
     { ms: 2650, text: "[BOT-NET] BOT-001 → BOT-847 locked on target — READY",        color: "green"  },
     { ms: 2900, text: "[RAILGUN] ⚡  FIRE — impression flood INITIATED",              color: "yellow" },
@@ -104,9 +117,14 @@ export default function RailgunPage() {
   const [impressions, setImpressions]   = useState(0);
   const [progress, setProgress]         = useState(0);
 
+  const [preview, setPreview]           = useState<InstagramProfile | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState("");
+
   const terminalRef  = useRef<HTMLDivElement>(null);
   const timersRef    = useRef<ReturnType<typeof setTimeout>[]>([]);
   const intervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lineId       = useRef(0);
 
   const cleanTarget = target.replace("@", "").trim();
@@ -121,6 +139,47 @@ export default function RailgunPage() {
   }, []);
 
   useEffect(() => () => clearTimers(), [clearTimers]);
+
+  // Debounced profile preview fetch
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!cleanTarget || firing || fired) {
+      setPreview(null);
+      setPreviewError("");
+      return;
+    }
+
+    setPreviewLoading(true);
+    setPreviewError("");
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/ig-scrape", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: cleanTarget }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          setPreviewError(data.error ?? "Profile not found");
+          setPreview(null);
+        } else {
+          setPreview(data as InstagramProfile);
+        }
+      } catch {
+        setPreviewError("Network error");
+        setPreview(null);
+      } finally {
+        setPreviewLoading(false);
+      }
+    }, 800);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cleanTarget]);
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -139,7 +198,7 @@ export default function RailgunPage() {
     setFiredTarget(cleanTarget);
     clearTimers();
 
-    const sequence = buildSequence(cleanTarget);
+    const sequence = buildSequence(cleanTarget, preview);
 
     sequence.forEach(({ ms, text, color }) => {
       const t = setTimeout(() => {
@@ -178,6 +237,8 @@ export default function RailgunPage() {
     setLogLines([]);
     setImpressions(0);
     setProgress(0);
+    setPreview(null);
+    setPreviewError("");
   };
 
   const showTerminal = firing || fired;
@@ -265,6 +326,86 @@ export default function RailgunPage() {
               </p>
             )}
           </div>
+
+          {/* Profile preview */}
+          <AnimatePresence>
+            {previewLoading && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-2 border border-neon-yellow/20 bg-black/30 px-3 py-2.5 text-[11px] text-neon-yellow/60"
+              >
+                <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                Resolving target...
+              </motion.div>
+            )}
+            {!previewLoading && previewError && (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="border border-neon-red/30 bg-neon-red/5 px-3 py-2 text-[11px] text-neon-red"
+              >
+                TARGET ERROR: {previewError}
+              </motion.div>
+            )}
+            {!previewLoading && preview && (
+              <motion.div
+                key="profile"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25 }}
+                className="border border-neon-yellow/30 bg-black/30 p-3 space-y-3"
+              >
+                {/* Profile row */}
+                <div className="flex items-center gap-3">
+                  <div className="relative w-10 h-10 shrink-0 rounded-full border border-neon-yellow/40 bg-bg-card flex items-center justify-center overflow-hidden">
+                    {preview.profilePicUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={preview.profilePicUrl}
+                        alt={preview.username}
+                        referrerPolicy="no-referrer"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    )}
+                    <Users className="w-4 h-4 text-text-dim" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm text-neon-yellow font-bold">@{preview.username}</span>
+                      {preview.isVerified && <CheckCircle className="w-3 h-3 text-neon-yellow shrink-0" />}
+                      {preview.isPrivate && <ShieldAlert className="w-3 h-3 text-neon-red shrink-0" />}
+                    </div>
+                    {preview.fullName && (
+                      <p className="text-[10px] text-text-dim truncate">{preview.fullName}</p>
+                    )}
+                    {preview.bio && (
+                      <p className="text-[10px] text-text-dim/70 line-clamp-1 mt-0.5">{preview.bio}</p>
+                    )}
+                  </div>
+                </div>
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {[
+                    { label: "POSTS",     value: preview.postsCount },
+                    { label: "FOLLOWERS", value: preview.followersCount },
+                    { label: "FOLLOWING", value: preview.followingCount },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="border border-neon-yellow/20 bg-black/20 py-1.5 px-1">
+                      <p className="text-xs text-neon-yellow font-bold tabular-nums">{value ?? "—"}</p>
+                      <p className="text-[9px] text-text-dim tracking-widest mt-0.5">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <AnimatePresence mode="wait">
             {fired ? (
