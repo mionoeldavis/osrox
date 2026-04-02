@@ -71,11 +71,6 @@ export async function scrapeInstagramProfile(
     llmClient: new AISdkClient({
       model: gateway("google/gemini-2.5-flash"),
     }),
-    browserbaseSessionCreateParams: {
-      browserSettings: {
-        advancedStealth: true,
-      },
-    },
     verbose: 0,
   });
 
