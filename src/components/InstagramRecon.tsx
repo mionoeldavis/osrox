@@ -145,13 +145,20 @@ export default function InstagramRecon() {
                 <img
                   src={profile.profilePicUrl}
                   alt={profile.username}
+                  referrerPolicy="no-referrer"
                   className="w-12 h-12 rounded-full border border-neon-cyan/30 shrink-0 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    e.currentTarget.nextElementSibling?.removeAttribute("hidden");
+                  }}
                 />
-              ) : (
-                <div className="w-12 h-12 rounded-full border border-border-dim bg-bg-card shrink-0 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-text-dim" />
-                </div>
-              )}
+              ) : null}
+              <div
+                hidden={!!profile.profilePicUrl}
+                className="w-12 h-12 rounded-full border border-border-dim bg-bg-card shrink-0 flex items-center justify-center"
+              >
+                <Users className="w-5 h-5 text-text-dim" />
+              </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-sm text-neon-cyan font-bold">
@@ -229,18 +236,21 @@ export default function InstagramRecon() {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 border border-border-dim bg-black/20 px-2.5 py-1.5 text-[11px] text-neon-green hover:border-neon-green/40 hover:bg-neon-green/5 transition-all group"
                       >
-                        {post.thumbnail ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={post.thumbnail}
-                            alt=""
-                            className="w-7 h-7 object-cover shrink-0 border border-border-dim"
-                          />
-                        ) : (
-                          <div className="w-7 h-7 bg-bg-card border border-border-dim shrink-0 flex items-center justify-center">
-                            <ImageIcon className="w-3.5 h-3.5 text-text-dim" />
-                          </div>
-                        )}
+                        <div className="w-7 h-7 shrink-0 relative border border-border-dim bg-bg-card flex items-center justify-center">
+                          {post.thumbnail && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={post.thumbnail}
+                              alt=""
+                              referrerPolicy="no-referrer"
+                              className="absolute inset-0 w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          )}
+                          <ImageIcon className="w-3.5 h-3.5 text-text-dim" />
+                        </div>
                         <span className="truncate flex-1 font-mono">
                           {post.url}
                         </span>
