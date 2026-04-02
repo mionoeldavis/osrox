@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap,
@@ -9,10 +9,10 @@ import {
   TrendingUp,
   Ban,
   ChevronRight,
-  Loader2,
   Info,
   Target,
   AtSign,
+  Terminal,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
@@ -39,44 +39,155 @@ const SHADOWBAN_REASONS = [
   },
 ];
 
+const TOTAL_IMPRESSIONS = 2_400_000;
+const FIRE_DURATION_MS = 9000;
+
+type LogColor = "yellow" | "green" | "red" | "cyan" | "dim";
+
+interface LogLine {
+  id: number;
+  text: string;
+  color: LogColor;
+}
+
+function buildSequence(t: string): Array<{ ms: number; text: string; color: LogColor }> {
+  return [
+    { ms: 0,    text: "[RAILGUN] Payload engine v4.2 — initializing...",              color: "yellow" },
+    { ms: 250,  text: "[SYS]     Loading CDN spoof layer... OK",                      color: "dim"    },
+    { ms: 480,  text: "[SYS]     Loading rate-limit bypass... OK",                    color: "dim"    },
+    { ms: 700,  text: "[SWARM]   Connecting to distributed bot network...",            color: "dim"    },
+    { ms: 1050, text: "[SWARM]   Node scan complete — 847 / 847 nodes ONLINE",        color: "green"  },
+    { ms: 1300, text: "[SWARM]   Region map: US-EAST ██ EU-WEST ██ ASIA ██ LATAM ██", color: "cyan"   },
+    { ms: 1600, text: `[TARGET]  Resolving @${t}...`,                                 color: "dim"    },
+    { ms: 1950, text: `[TARGET]  Profile confirmed ✓  @${t}`,                        color: "yellow" },
+    { ms: 2150, text: `[TARGET]  Posts: 234  |  Followers: 12.4K  |  Following: 891`, color: "dim"    },
+    { ms: 2400, text: "[BOT-NET] Assigning 847 bots to impression queue...",           color: "dim"    },
+    { ms: 2650, text: "[BOT-NET] BOT-001 → BOT-847 locked on target — READY",        color: "green"  },
+    { ms: 2900, text: "[RAILGUN] ⚡  FIRE — impression flood INITIATED",              color: "yellow" },
+    { ms: 3200, text: "[INJECT]  Batch  #1 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 3650, text: "[INJECT]  Batch  #2 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 4000, text: "[BYPASS]  Instagram CDN rate-limiter: BYPASSED ✓",             color: "green"  },
+    { ms: 4200, text: "[INJECT]  Batch  #3 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 4600, text: "[INJECT]  Batch  #4 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 4900, text: "[MONITOR] Engagement ratio: 0.00%  ← anomaly threshold hit",   color: "red"    },
+    { ms: 5200, text: "[INJECT]  Batch  #5 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 5550, text: "[INJECT]  Batch  #6 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 5900, text: "[INSTA]   Algorithm flagged — suppression signal detected",    color: "red"    },
+    { ms: 6150, text: "[INJECT]  Batch  #7 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 6500, text: "[INJECT]  Batch  #8 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 6800, text: "[INSTA]   Shadowban trigger: ACTIVE — account suppressed",     color: "red"    },
+    { ms: 7100, text: "[INJECT]  Batch  #9 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 7450, text: "[INJECT]  Batch #10 — 240,000 impressions dispatched",         color: "green"  },
+    { ms: 7800, text: "[SWARM]   All 847 bots standing down...",                      color: "dim"    },
+    { ms: 8200, text: `[RAILGUN] ✓  OPERATION COMPLETE — @${t} flooded`,             color: "green"  },
+    { ms: 8500, text: "[STATUS]  Total impressions: 2,400,000",                       color: "cyan"   },
+    { ms: 8700, text: "[STATUS]  Shadowban probability: CRITICAL (98.7%)",            color: "red"    },
+    { ms: 8900, text: "[STATUS]  Likes gained: 0  |  Followers gained: 0",            color: "red"    },
+  ];
+}
+
+const COLOR_CLASS: Record<LogColor, string> = {
+  yellow: "text-neon-yellow",
+  green:  "text-neon-green",
+  red:    "text-neon-red",
+  cyan:   "text-neon-cyan",
+  dim:    "text-text-dim",
+};
+
 export default function RailgunPage() {
-  const [target, setTarget] = useState("");
-  const [firing, setFiring] = useState(false);
-  const [fired, setFired] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [firedTarget, setFiredTarget] = useState("");
+  const [target, setTarget]             = useState("");
+  const [firing, setFiring]             = useState(false);
+  const [fired, setFired]               = useState(false);
+  const [firedTarget, setFiredTarget]   = useState("");
+  const [logLines, setLogLines]         = useState<LogLine[]>([]);
+  const [impressions, setImpressions]   = useState(0);
+  const [progress, setProgress]         = useState(0);
+
+  const terminalRef  = useRef<HTMLDivElement>(null);
+  const timersRef    = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const intervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lineId       = useRef(0);
 
   const cleanTarget = target.replace("@", "").trim();
 
-  const handleFire = async () => {
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => () => clearTimers(), [clearTimers]);
+
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [logLines]);
+
+  const handleFire = () => {
     if (firing || fired || !cleanTarget) return;
+
     setFiring(true);
+    setFired(false);
+    setLogLines([]);
+    setImpressions(0);
     setProgress(0);
     setFiredTarget(cleanTarget);
+    clearTimers();
 
-    for (let i = 0; i <= 100; i += 4) {
-      await new Promise((r) => setTimeout(r, 60));
-      setProgress(i);
-    }
+    const sequence = buildSequence(cleanTarget);
 
-    setProgress(100);
-    setFiring(false);
-    setFired(true);
+    sequence.forEach(({ ms, text, color }) => {
+      const t = setTimeout(() => {
+        setLogLines((prev) => [...prev, { id: lineId.current++, text, color }]);
+      }, ms);
+      timersRef.current.push(t);
+    });
+
+    // Impression counter — runs for FIRE_DURATION_MS
+    const startTime = Date.now();
+    intervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(elapsed / FIRE_DURATION_MS, 1);
+      // Ease-out cubic so it slows near the end
+      const eased = 1 - Math.pow(1 - pct, 3);
+      setImpressions(Math.floor(eased * TOTAL_IMPRESSIONS));
+      setProgress(Math.floor(pct * 100));
+
+      if (pct >= 1) {
+        clearInterval(intervalRef.current!);
+        intervalRef.current = null;
+        setImpressions(TOTAL_IMPRESSIONS);
+        setProgress(100);
+        setFiring(false);
+        setFired(true);
+      }
+    }, 50);
   };
 
   const handleReset = () => {
+    clearTimers();
     setFired(false);
-    setProgress(0);
+    setFiring(false);
     setTarget("");
     setFiredTarget("");
+    setLogLines([]);
+    setImpressions(0);
+    setProgress(0);
   };
+
+  const showTerminal = firing || fired;
 
   return (
     <div className="h-full flex flex-col bg-bg-dark bg-grid">
       <Navbar />
 
       <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-        {/* Header + Fire Button */}
+
+        {/* ── Header ── */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -85,13 +196,19 @@ export default function RailgunPage() {
         >
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Zap className="w-7 h-7 text-neon-yellow" style={{ filter: "drop-shadow(0 0 8px rgba(255,230,0,0.7))" }} />
+              <Zap
+                className="w-7 h-7 text-neon-yellow"
+                style={{ filter: "drop-shadow(0 0 8px rgba(255,230,0,0.7))" }}
+              />
               {firing && (
                 <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-neon-yellow animate-ping" />
               )}
             </div>
             <div>
-              <h1 className="text-neon-yellow text-xl font-bold tracking-[0.4em]" style={{ textShadow: "0 0 12px rgba(255,230,0,0.6), 0 0 24px rgba(255,230,0,0.3)" }}>
+              <h1
+                className="text-neon-yellow text-xl font-bold tracking-[0.4em]"
+                style={{ textShadow: "0 0 12px rgba(255,230,0,0.6), 0 0 24px rgba(255,230,0,0.3)" }}
+              >
                 RAILGUN
               </h1>
               <p className="text-text-dim text-[10px] tracking-widest uppercase mt-0.5">
@@ -102,25 +219,16 @@ export default function RailgunPage() {
 
           <div className="flex items-center gap-2 text-[10px] text-text-dim">
             {firing ? (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-neon-yellow animate-ping" />
-                <span className="text-neon-yellow">FIRING...</span>
-              </>
+              <><span className="w-1.5 h-1.5 rounded-full bg-neon-yellow animate-ping" /><span className="text-neon-yellow">FIRING...</span></>
             ) : fired ? (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-neon-green" />
-                <span className="text-neon-green">PAYLOAD DELIVERED</span>
-              </>
+              <><span className="w-1.5 h-1.5 rounded-full bg-neon-green" /><span className="text-neon-green">PAYLOAD DELIVERED</span></>
             ) : (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-text-dim" />
-                <span>STANDBY</span>
-              </>
+              <><span className="w-1.5 h-1.5 rounded-full bg-text-dim" /><span>STANDBY</span></>
             )}
           </div>
         </motion.div>
 
-        {/* Target input */}
+        {/* ── Target input ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -192,65 +300,109 @@ export default function RailgunPage() {
                 }
               >
                 {firing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    FIRING ON @{firedTarget}...
-                  </>
+                  <><Zap className="w-4 h-4 animate-pulse" />FIRING ON @{firedTarget}...</>
                 ) : (
-                  <>
-                    <Zap className="w-4 h-4" />
-                    FIRE RAILGUN
-                  </>
+                  <><Zap className="w-4 h-4" />FIRE RAILGUN</>
                 )}
               </motion.button>
             )}
           </AnimatePresence>
         </motion.div>
 
-        {/* Progress bar */}
+        {/* ── Terminal + counter ── */}
         <AnimatePresence>
-          {(firing || fired) && (
+          {showTerminal && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="card p-4 space-y-2"
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ duration: 0.35 }}
+              className="card overflow-hidden"
+              style={{ borderColor: fired ? "rgba(0,255,65,0.25)" : "rgba(255,230,0,0.2)" }}
             >
-              <div className="flex justify-between text-[10px] tracking-widest uppercase">
-                <span className="text-neon-yellow">Impression Payload</span>
-                <span className={fired ? "text-neon-green" : "text-neon-yellow"}>
-                  {fired ? "DELIVERED" : `${progress}%`}
+              {/* Terminal title bar */}
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-dim bg-black/30">
+                <div className="flex items-center gap-2">
+                  <Terminal className="w-3.5 h-3.5 text-neon-yellow" />
+                  <span className="text-[10px] text-neon-yellow tracking-widest uppercase font-bold">
+                    Railgun Terminal
+                  </span>
+                </div>
+                <span className={`text-[10px] tracking-widest ${fired ? "text-neon-green" : "text-neon-yellow"}`}>
+                  {fired ? "COMPLETE" : "ACTIVE"}
                 </span>
               </div>
-              <div className="w-full h-1.5 bg-border-dim overflow-hidden">
-                <motion.div
-                  className="h-full"
-                  style={{ background: fired ? "var(--neon-green)" : "var(--neon-yellow)", boxShadow: fired ? "0 0 8px rgba(0,255,65,0.6)" : "0 0 8px rgba(255,230,0,0.6)" }}
-                  initial={{ width: "0%" }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ ease: "linear" }}
-                />
-              </div>
-              {fired && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-[10px] text-neon-green"
+
+              {/* Big impression counter */}
+              <div
+                className="px-4 py-5 border-b border-border-dim text-center"
+                style={{ background: "rgba(0,0,0,0.4)" }}
+              >
+                <p className="text-[10px] text-text-dim tracking-widest uppercase mb-1">
+                  Impressions Injected
+                </p>
+                <p
+                  className="text-4xl md:text-5xl font-bold tabular-nums"
+                  style={{
+                    color: fired ? "var(--neon-green)" : "var(--neon-yellow)",
+                    textShadow: fired
+                      ? "0 0 20px rgba(0,255,65,0.6), 0 0 40px rgba(0,255,65,0.3)"
+                      : "0 0 20px rgba(255,230,0,0.6), 0 0 40px rgba(255,230,0,0.3)",
+                  }}
                 >
-                  ✓ 2,400,000+ impressions injected on @{firedTarget} — payload complete
-                </motion.p>
-              )}
+                  {impressions.toLocaleString()}
+                </p>
+                <p className="text-[10px] text-text-dim mt-1">
+                  of {TOTAL_IMPRESSIONS.toLocaleString()} target
+                </p>
+
+                {/* Progress bar */}
+                <div className="w-full h-1 bg-border-dim mt-3 overflow-hidden">
+                  <motion.div
+                    className="h-full"
+                    style={{
+                      background: fired ? "var(--neon-green)" : "var(--neon-yellow)",
+                      boxShadow: fired
+                        ? "0 0 8px rgba(0,255,65,0.7)"
+                        : "0 0 8px rgba(255,230,0,0.7)",
+                    }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ ease: "linear", duration: 0.05 }}
+                  />
+                </div>
+              </div>
+
+              {/* Log lines */}
+              <div
+                ref={terminalRef}
+                className="h-52 overflow-y-auto px-4 py-3 space-y-0.5 bg-black/20"
+              >
+                {logLines.map((line) => (
+                  <motion.p
+                    key={line.id}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className={`text-[11px] font-mono leading-relaxed whitespace-pre ${COLOR_CLASS[line.color]}`}
+                  >
+                    {line.text}
+                  </motion.p>
+                ))}
+                {firing && (
+                  <p className="text-[11px] text-text-dim cursor-blink">&nbsp;</p>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Info banner */}
+        {/* ── Info banner ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="card p-4 flex gap-3 border-neon-yellow/20"
-          style={{ borderColor: "rgba(255,230,0,0.15)", boxShadow: "0 0 20px rgba(255,230,0,0.04), inset 0 0 20px rgba(255,230,0,0.02)" }}
+          className="card p-4 flex gap-3"
+          style={{ borderColor: "rgba(255,230,0,0.15)", boxShadow: "0 0 20px rgba(255,230,0,0.04)" }}
         >
           <Info className="w-4 h-4 text-neon-yellow shrink-0 mt-0.5" />
           <div className="space-y-1.5">
@@ -263,15 +415,15 @@ export default function RailgunPage() {
               impossible to trace back to a purchase — it simply looks like a viral moment.
             </p>
             <p className="text-[11px] text-[#c9d1d9]/70 leading-relaxed">
-              However, the side effect is severe: because the account gains <span className="text-neon-yellow">zero likes,
-              zero comments, and zero new followers</span> alongside those impressions, Instagram's algorithm reads the
-              engagement ratio as pathological. The result is an automatic and silent{" "}
-              <span className="text-neon-red font-bold">shadowban</span>.
+              However, the side effect is severe: because the account gains{" "}
+              <span className="text-neon-yellow">zero likes, zero comments, and zero new followers</span> alongside
+              those impressions, Instagram's algorithm reads the engagement ratio as pathological. The result is an
+              automatic and silent <span className="text-neon-red font-bold">shadowban</span>.
             </p>
           </div>
         </motion.div>
 
-        {/* Shadowban breakdown cards */}
+        {/* ── Shadowban breakdown ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -300,9 +452,7 @@ export default function RailgunPage() {
                     <p className="text-[10px] font-bold tracking-widest text-neon-red uppercase">
                       {item.title}
                     </p>
-                    <p className="text-[11px] text-text-dim leading-relaxed">
-                      {item.desc}
-                    </p>
+                    <p className="text-[11px] text-text-dim leading-relaxed">{item.desc}</p>
                   </div>
                 </motion.div>
               );
@@ -310,7 +460,7 @@ export default function RailgunPage() {
           </div>
         </motion.div>
 
-        {/* Bottom note */}
+        {/* ── Bottom note ── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -321,9 +471,10 @@ export default function RailgunPage() {
           <span>
             Use Railgun only on accounts you intend to burn. The shadowban is persistent and typically
             requires a 2–4 week cooldown before organic reach is partially restored. There is no
-            guaranteed recovery path once Instagram's trust score for the account drops below threshold.
+            guaranteed recovery path once Instagram&apos;s trust score for the account drops below threshold.
           </span>
         </motion.div>
+
       </main>
     </div>
   );
