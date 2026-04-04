@@ -80,23 +80,24 @@ export default function PasswordScreen({ onSuccess }: PasswordScreenProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black flex items-start justify-start p-8 overflow-hidden cursor-text"
+      className="fixed inset-0 z-[100] bg-black flex items-start justify-start p-4 sm:p-8 overflow-y-auto cursor-text"
       onClick={handleContainerClick}
     >
       <div className="w-full max-w-2xl">
-        <div className="mb-6 text-neon-green text-glow-green text-lg font-bold tracking-widest">
-          ╔══════════════════════════════════════════╗
-          <br />
-          ║&nbsp;&nbsp;&nbsp;&nbsp;O S R O X&nbsp;&nbsp;—&nbsp;&nbsp;S E C U R E&nbsp;&nbsp;L O G I N&nbsp;&nbsp;║
-          <br />
-          ╚══════════════════════════════════════════╝
+        <div className="mb-6 border border-neon-green/40 p-3 sm:p-4">
+          <div className="text-neon-green text-glow-green font-bold text-sm sm:text-lg tracking-[0.3em] sm:tracking-widest text-center">
+            O S R O X
+          </div>
+          <div className="text-neon-green/60 text-[10px] sm:text-xs tracking-widest text-center mt-1">
+            SECURE LOGIN
+          </div>
         </div>
 
         <div className="space-y-1 mb-4">
           {introLines.map((line, i) => (
             <div
               key={i}
-              className={`font-mono text-sm ${
+              className={`font-mono text-xs sm:text-sm break-words ${
                 line.includes("WARNING")
                   ? "text-neon-red text-glow-red"
                   : line.includes("━")
@@ -112,7 +113,7 @@ export default function PasswordScreen({ onSuccess }: PasswordScreenProps) {
         {introComplete && (
           <>
             {error && (
-              <div className="font-mono text-sm text-neon-red text-glow-red mb-2">
+              <div className="font-mono text-xs sm:text-sm text-neon-red text-glow-red mb-2 break-words">
                 [!] {error}
                 {attempts > 1 && (
                   <span className="text-neon-yellow ml-2">
@@ -122,12 +123,12 @@ export default function PasswordScreen({ onSuccess }: PasswordScreenProps) {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex items-center font-mono text-sm">
-              <span className="text-neon-green text-glow-green mr-1">
+            <form onSubmit={handleSubmit} className="flex flex-wrap sm:flex-nowrap items-center font-mono text-xs sm:text-sm gap-y-1">
+              <span className="text-neon-green text-glow-green mr-1 shrink-0">
                 operator@osrox:~$
               </span>
-              <span className="text-green-400/80 mr-2">password:</span>
-              <div className="relative flex-1">
+              <span className="text-green-400/80 mr-2 shrink-0">password:</span>
+              <div className="relative flex-1 min-w-[120px]">
                 <input
                   ref={inputRef}
                   type="password"
@@ -136,11 +137,11 @@ export default function PasswordScreen({ onSuccess }: PasswordScreenProps) {
                   disabled={checking}
                   autoComplete="off"
                   spellCheck={false}
-                  className="bg-transparent border-none outline-none text-neon-green text-sm font-mono w-full caret-transparent"
+                  className="bg-transparent border-none outline-none text-neon-green text-xs sm:text-sm font-mono w-full caret-transparent"
                   style={{ color: "transparent" }}
                 />
                 <div
-                  className="absolute inset-0 pointer-events-none flex items-center text-neon-green text-sm"
+                  className="absolute inset-0 pointer-events-none flex items-center text-neon-green text-xs sm:text-sm"
                   aria-hidden
                 >
                   {"*".repeat(password.length)}
@@ -152,7 +153,7 @@ export default function PasswordScreen({ onSuccess }: PasswordScreenProps) {
             </form>
 
             {checking && (
-              <div className="font-mono text-sm text-neon-cyan text-glow-cyan mt-2 animate-pulse">
+              <div className="font-mono text-xs sm:text-sm text-neon-cyan text-glow-cyan mt-2 animate-pulse">
                 Verifying credentials...
               </div>
             )}
@@ -160,7 +161,7 @@ export default function PasswordScreen({ onSuccess }: PasswordScreenProps) {
         )}
       </div>
 
-      <div className="absolute bottom-4 right-6 text-text-dim text-xs">
+      <div className="absolute bottom-4 right-4 sm:right-6 text-text-dim text-[10px] sm:text-xs">
         OSROX SECURITY // ENCRYPTED CHANNEL
       </div>
     </div>
