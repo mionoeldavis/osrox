@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { formatNumber } from "@/lib/format";
+import { proxyImg } from "@/lib/proxyImg";
 import type { InstagramProfile } from "@/lib/instagram";
 
 const SHADOWBAN_REASONS = [
@@ -364,12 +365,11 @@ export default function RailgunPage() {
                 {/* Profile row */}
                 <div className="flex items-center gap-3">
                   <div className="relative w-10 h-10 shrink-0 rounded-full border border-neon-yellow/40 bg-bg-card flex items-center justify-center overflow-hidden">
-                    {preview.profilePicUrl && (
+                    {proxyImg(preview.profilePicUrl) && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={preview.profilePicUrl}
+                        src={proxyImg(preview.profilePicUrl)!}
                         alt={preview.username}
-                        referrerPolicy="no-referrer"
                         className="absolute inset-0 w-full h-full object-cover"
                         onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />

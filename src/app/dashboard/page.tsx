@@ -28,39 +28,33 @@ export default function DashboardPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
-          {/* Left column: Target Panel + Instagram Recon */}
           <motion.div
             className="lg:col-span-4 flex flex-col gap-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="min-h-[400px]">
-              <TargetPanel onOrderPlaced={() => setOrderRefresh((c) => c + 1)} />
-            </div>
-            <div className="min-h-[400px]">
-              <InstagramRecon />
-            </div>
+            <TargetPanel onOrderPlaced={() => setOrderRefresh((c) => c + 1)} />
+            <InstagramRecon />
           </motion.div>
 
-          {/* Right column: Map + Terminal */}
           <motion.div
             className="lg:col-span-8 flex flex-col gap-4 md:gap-6"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div className="h-[250px] md:h-[280px]">
+            <div className="h-[200px] md:h-[280px]">
               <BotMap />
             </div>
-            <div className="h-[200px] md:h-[220px]">
+            <div className="h-[160px] md:h-[220px]">
               <FakeTerminal />
             </div>
           </motion.div>
         </div>
 
         <motion.div
-          className="h-[280px] md:h-[320px]"
+          className="h-[240px] md:h-[320px]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
